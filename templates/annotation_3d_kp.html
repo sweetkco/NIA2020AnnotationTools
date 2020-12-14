@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+{% block content %}
+    <div class="row">
+        <div id="konva-container" class="col-8"></div>
+        <div class="col-3 table-wrapper-scroll-y my-custom-scrollbar">
+            <div class="float-right">
+                <input id="checkbox-overray" type="checkbox" data-toggle="toggle" data-on="on" data-off="off" data-size="mini" data-offstyle="light">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Cam 0
+                </button>
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    <a class="dropdown-item" href="#">0</a>
+                    <a class="dropdown-item" href="#">1</a>
+                    <a class="dropdown-item" href="#">2</a>
+                    <a class="dropdown-item" href="#">3</a>
+                </div>
+                <button name="save" class="btn btn-outline-warning">Save</button>
+                <button name="apply" class="btn btn-outline-success">
+                    <span class="spinner-grow spinner-grow-sm" role="status" style="display:none"></span>
+                    Apply
+                </button>
+                <button name="Download" class="btn btn-outline-danger">Download</button>
+            </div>
+            <table id="dtHorizontalVerticalExample" class="table table-bordered table-sm " cellspacing="0" width="100%">
+                <thead>
+                    <tr><th>frame no</th></tr>
+                </thead>
+                <tbody>
+                {% for frame in frame_list %}
+                    <tr><td><button class="btn btn-outline-dark btn-block btn-frame" name={{ frame }}>{{ frame }}</button></td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        $(function () {
+            let result, overrayResult, global_frame_no, global_camera_no;
+
+            $('button').on('click', function (event) {
+                let human = polygonLayer.findOne('.human');
+                let joint, point = [];
+                for (let i = 0; i < 24; i++) {
+                    joint = human.findOne('.circle'+i);
+                    point.push([joint.x(), joint.y()]);
+                }
+                result[global_camera_no]['joint2d'] = point;
+            });
+            $('#checkbox-overray').on('change', function (event) {
+               if ($(this).prop('checked')) {
+                   imageOverrayLayer.show();
+               }
+               else {
+                   imageOverrayLayer.hide();
+               }
+               imageOverrayLayer.draw()
+            });
+            $('button[name=Download]').on('click', function (event) {
+                console.log('download');
+                $.ajax({
+                    url: "{% url 'annotation' %}",
+                    type: "post",
+                    data: {'frame_no': global_frame_no, 'usage': 'download'},
+                    success: function (response) {
+                        console.log('success');
+                        let filename = response['filename']
+
+                        let ret = window.open("{% url 'home' %}" + filename);
+                    },
+                    error: function (response) {
+                        console.log('error');
+                    },
+                })
+            })
+            function updateImage(data, camera_no, isOverray) {
+                let initPose = data[camera_no]['joint2d'];
+                if (!isOverray)
+                    imageObj.src = 'data:image/png;base64,' + data[camera_no]['imagebytearray'];
+                else
+                    imageObjOverray.src = 'data:image/png;base64,' + data[camera_no]['overraybytearray'];
+                // keypoint position vis
+                let preGroup = polygonLayer.find('Group')[0]
+                if (preGroup !== undefined)
+                    preGroup.destroy();
+                let group = new Konva.Group();
+                polygonLayer.add(addHumanGroup(stage, polygonLayer, initPose));
+                polygonLayer.batchDraw();
+                global_camera_no = camera_no;
+            }
+            function getImageByFrame(frame_no) {
+                $.ajax({
+                    url: "{% url 'annotation' %}",
+                    type: "post",
+                    data: {'frame_no': frame_no, 'width': 1080, 'usage': 'getdata'},
+                    dataType: 'json',
+                    cache: false,
+                    success: function (response) {
+                        console.log('success');
+                        result = response['data']
+                        updateImage(result, parseInt($('#dropdownMenuButton').text().replace('Cam ', '')), false);
+                        global_frame_no = frame_no;
+                    },
+                    error: function (response) {
+                        console.log('error');
+                    },
+                });
+            }
+            // dropdown menu setting
+            $(".dropdown-menu a").on('click', function() {
+                $("#dropdownMenuButton").text('Cam ' + $(this).text());
+                $("#dropdownMenuButton").val('Cam ' + $(this).text());
+                updateImage(result, parseInt($(this).text()), false);
+                updateImage(result, parseInt($(this).text()), true);
+                global_camera_no = parseInt($(this).text());
+            })
+            // data-table setting
+            $('#dtHorizontalVerticalExample').DataTable({
+                "scrollX": true,
+                "scrollY": 340,
+                drawCallback: function(){
+                    // html event setting
+                    $('button.btn-frame').on('click', function (event) {
+                        event.preventDefault();
+                        frame_no = event.target.name;
+                        getImageByFrame(frame_no);
+                    });
+                }
+            });
+
+            $('.dataTables_length').addClass('bs-select');
+            $('button[name=save]').on('click', function (event) {
+                let data = [];
+                $.each(result, function (i, item) {
+                    data.push({
+                        'camera_no': item['camera_no'],
+                        'joint2d': item['joint2d']
+                    });
+                });
+                let sendData = {
+                    'data': data,
+                }
+                let json_text = JSON.stringify(sendData, null, 4);
+
+                $.ajax({
+                    url: "{% url 'annotation' %}",
+                    type: "post",
+                    data: {
+                        'frame_no': global_frame_no,
+                        'width': 1080,
+                        'data': json_text,
+                        'usage': 'save'
+                    },
+                    dataType: 'json',
+                    cache: false,
+                    success: function (response) {
+                        console.log('success');
+                        alert('Save success')
+                    },
+                    error: function (response) {
+                        console.log('error');
+                    },
+                });
+            });
+            $('button[name=apply]').on('click', function (event) {
+                event.preventDefault();
+                let button = $(this)[0];
+
+                $.ajax({
+                    url: "{% url 'annotation' %}",
+                    type: "post",
+                    data: {'frame_no': global_frame_no, 'width': 1080, 'usage': 'apply'},
+                    dataType: 'json',
+                    cache: false,
+                    success: function (response) {
+                        console.log('success');
+                        for (let i = 0; i < result.length; i++) {
+                            result[i]['overraybytearray'] = response['data'][i]['overraybytearray']
+                        }
+                        $('#checkbox-overray').bootstrapToggle('on')
+                        updateImage(result, parseInt($('#dropdownMenuButton').text().replace('Cam ', '')), true);
+                    },
+                    beforeSend:function() {
+                        button.disabled = true;
+                        button.children[0].style.display = "";
+                    },
+                    complete: function () {
+                        button.disabled = false;
+                        button.children[0].style.display = "none";
+                    },
+                    error: function (response) {
+                        console.log('error');
+                    },
+                });
+            });
+
+            // Konva.js
+            let stage = new Konva.Stage({
+                container: 'konva-container',
+                width: 1920,
+                height: 1080
+            });
+            // polygon layer
+            let polygonLayer = new Konva.Layer();
+            // image layer
+            let imageLayer = new Konva.Layer();
+            let imageOverrayLayer = new Konva.Layer();
+            stage.add(imageLayer, imageOverrayLayer, polygonLayer);
+
+            let imageObj = new Image();
+            imageObj.onload = function () {
+                let preImage = imageLayer.find('Image')[0];
+                if (preImage !== undefined)
+                    preImage.destroy();
+                let background = new Konva.Image({
+                    x:0,
+                    y:0,
+                    image: imageObj,
+                    width: 1080
+                });
+                imageLayer.add(background);
+                imageLayer.draw();
+            }
+            let imageObjOverray = new Image();
+            imageObjOverray.onload = function () {
+                let preImage = imageOverrayLayer.find('Image')[0];
+                if (preImage !== undefined)
+                    preImage.destroy();
+                let background = new Konva.Image({
+                    x:0,
+                    y:0,
+                    image: imageObjOverray,
+                    width: 1080,
+                    opacity: 0.5
+                });
+                imageOverrayLayer.add(background);
+                imageOverrayLayer.draw();
+            }
+
+            // init
+            getImageByFrame(0);
+        });
+
+    </script>
+{% endblock %}

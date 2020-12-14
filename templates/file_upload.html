@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% load custom_tags %}
+{% block content %}
+        <div class="row">
+            <div class="col-md-12 text-right"><div class="float-right"><button name="next" class="btn btn-outline-warning">Next Step</button></div><br></div>
+        </div>
+        <br>
+        <div class="row">
+            {% for item in saved_info %}
+                <div class="col bg-light border">
+                    <p/>
+                    <form method="post" name={{ item.camera }} target="fileUpload" enctype="multipart/form-data">
+                        <div class="row">
+                            <div class="col-4 border-right">
+                                <img name={{ item.camera }} class="img-thumbnail" src={{ item.src }} />
+
+                                    <div>camera_no: {{ item.camera }}</div>
+                                    <input type="file"><p/>
+                            </div>
+                            <div class="col-5">
+                                <div class="row">
+                                    <div class="col-3"><button class="btn btn-matrix btn-secondary btn-sm">intrinsics</button><p/>
+                                        <table class="table table-sm table-bordered" name={{ item.camera }} style="display:none">
+                                            <thead>
+                                            </thead>
+                                            <tbody>
+                                            <tr>
+                                                <td><input class="input-sm" type="text" value={{ item.intrinsics|index:0 }} name="intrinsics0"></td>
+                                                <td><input class="input-sm" type="text" value={{ item.intrinsics|index:1 }} name="intrinsics1"></td>
+                                                <td><input class="input-sm" type="text" value={{ item.intrinsics|index:2 }} name="intrinsics2"></td>
+                                            </tr>
+                                            <tr>
+                                                <td><input class="input-sm" type="text" value={{ item.intrinsics|index:3 }} name="intrinsics3"></td>
+                                                <td><input class="input-sm" type="text" value={{ item.intrinsics|index:4 }} name="intrinsics4"></td>
+                                                <td><input class="input-sm" type="text" value={{ item.intrinsics|index:5 }} name="intrinsics5"></td>
+                                            </tr>
+                                            <tr>
+                                                <td><input class="input-sm" type="text" value={{ item.intrinsics|index:6 }} name="intrinsics6"></td>
+                                                <td><input class="input-sm" type="text" value={{ item.intrinsics|index:7 }} name="intrinsics7"></td>
+                                                <td><input class="input-sm" type="text" value={{ item.intrinsics|index:8 }} name="intrinsics8"></td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-3">
+                                        <button class="btn btn-matrix btn-secondary btn-sm">extrinsics</button><p/>
+                                        <table class="table table-sm table-bordered" name={{ item.camera }} style="display:none">
+                                            <thead>
+                                            </thead>
+                                            <tbody>
+                                            <tr>
+                                                <td><input class="input-sm" type="text" value={{ item.extrinsics|index:0 }} name="extrinsics0"></td>
+                                                <td><input class="input-sm" type="text" value={{ item.extrinsics|index:1 }} name="extrinsics1"></td>
+                                                <td><input class="input-sm" type="text" value={{ item.extrinsics|index:2 }} name="extrinsics2"></td>
+                                                <td><input class="input-sm" type="text" value={{ item.extrinsics|index:3 }} name="extrinsics3"></td>
+                                            </tr>
+                                            <tr>
+                                                <td><input class="input-sm" type="text" value={{ item.extrinsics|index:4 }} name="extrinsics4"></td>
+                                                <td><input class="input-sm" type="text" value={{ item.extrinsics|index:5 }} name="extrinsics5"></td>
+                                                <td><input class="input-sm" type="text" value={{ item.extrinsics|index:6 }} name="extrinsics6"></td>
+                                                <td><input class="input-sm" type="text" value={{ item.extrinsics|index:7 }} name="extrinsics7"></td>
+                                            </tr>
+                                            <tr>
+                                                <td><input class="input-sm" type="text" value={{ item.extrinsics|index:8 }} name="extrinsics8"></td>
+                                                <td><input class="input-sm" type="text" value={{ item.extrinsics|index:9 }} name="extrinsics9"></td>
+                                                <td><input class="input-sm" type="text" value={{ item.extrinsics|index:10 }} name="extrinsics10"></td>
+                                                <td><input class="input-sm" type="text" value={{ item.extrinsics|index:11 }} name="extrinsics11"></td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <button class="btn btn-outline-primary upload" type="button" name={{ item.camera }}>
+                                    <span class="spinner-grow spinner-grow-sm" role="status" style="display:none"></span>
+                                    Upload
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                {% if forloop.counter|divisibleby:2 %}<div class="w-100"></div>{% else %}{% endif %}
+            {% endfor %}
+        </div>
+    <script>
+    $(function () {
+        function init() {
+            $.ajax({
+                url: "{% url 'home' %}",
+                dataType: 'json',
+                type: "post",
+
+            })
+        }
+    })
+        $('button[name=next]').on('click', function (event) {
+            console.log('click');
+            window.location.href = "{% url 'annotation' %}"
+        });
+        $('button.btn-matrix').on('click', function(event) {
+            event.preventDefault();
+            $(this).siblings('table').toggle();
+        });
+        // file upload button function
+        $('button.upload').on('click', function(event) {
+            event.preventDefault();
+            let button = $(this)[0];
+            form = $('form[name=' + button.name + ']')[0];
+            // get intrinsics
+            let intrinsics = []
+            for (let i = 0; i < 9; i++) {
+                let matrixName = 'intrinsics' + i;
+                intrinsics.push(parseFloat($(form[name=matrixName]).val()));
+            }
+            // get extrinsics
+            let extrinsics = []
+            for (let i = 0; i < 12; i++) {
+                let matrixName = 'extrinsics' + i;
+                extrinsics.push(parseFloat($(form[name=matrixName]).val()));
+            }
+
+            let formData = new FormData();
+            formData.append('file', form[0].files[0]);
+            formData.append('camera_no', form.name);
+            formData.append('intrinsics', intrinsics);
+            formData.append('extrinsics', extrinsics);
+
+            $.ajax({
+                url: "{% url 'home' %}",
+                dataType: 'json',
+                type: "post",
+                data: formData,
+                cache: false,
+                processData: false,
+                contentType: false,
+                enctype: 'multipart/form-data',
+                beforeSend:function() {
+                    button.disabled = true;
+                    button.children[0].style.display = "";
+                },
+                success: function (response) {
+                    alert(response['status']);
+                    $('img[name=' + form.name + ']')[0].src = 'data:image/png;base64,' + response['data'];
+                },
+                error: function (response) {
+                    console.log('error');
+                },
+                complete: function () {
+                    button.disabled = false;
+                    button.children[0].style.display = "none";
+                }
+            });
+        });
+    </script>
+{% endblock %}
