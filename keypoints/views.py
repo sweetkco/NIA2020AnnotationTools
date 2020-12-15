@@ -24,7 +24,6 @@ image_root_path = 'data'
 # Create your views here.
 class AnnotationView(TemplateView):
     template_name = 'annotation_3d_kp.html'
-    origin_size = (1080, 1920)
 
     def get(self, request, *args, **kwargs):
         rows = ImageDataset.objects.values('camera_no').annotate(
@@ -49,12 +48,14 @@ class AnnotationView(TemplateView):
                 image_path = Concat(F('camera_no'), Value('/'), F('img_path'), output_field=CharField()),
                 joint_2d = F('joint_2d'),
                 intrinsic = F('intrinsics'),
-                extrinsic = F('extrinsics')
-            ).values('camera', 'image_path', 'joint_2d', 'intrinsic', 'extrinsic')
-            image_path_list = [(x['camera'], x['image_path'], x['joint_2d'], x['intrinsic'], x['extrinsic']) for x in rows]
+                extrinsic = F('extrinsics'),
+                img_width = F('width'),
+                img_height = F('height')
+            ).values('camera', 'image_path', 'joint_2d', 'intrinsic', 'extrinsic', 'img_width', 'img_height')
+            image_path_list = [(x['camera'], x['image_path'], x['joint_2d'], x['intrinsic'], x['extrinsic'], x['img_width'], x['img_height']) for x in rows]
 
             data = []
-            for camera_no, image_path, joint2d, intrinsics, extrinsics in image_path_list:
+            for camera_no, image_path, joint2d, intrinsics, extrinsics, img_width, img_height in image_path_list:
                 if joint2d is None:
                     try:
                         prev_joint = ImageDataset.objects.get(frame_no=frame_no-1, camera_no=camera_no).joint_2d
@@ -72,8 +73,8 @@ class AnnotationView(TemplateView):
                         ).tolist())
 
                 image = cv2.imread(osp.join(image_root_path, image_path))
-                ratio = width / self.origin_size[1]
-                dim = (width, int(self.origin_size[0] * ratio))
+                ratio = width / img_width
+                dim = (width, int(img_height * ratio))
                 joint2d = (np.array(literal_eval(joint2d))*ratio).tolist()
                 resized_image = cv2.resize(image, dim, interpolation=cv2.INTER_AREA)
                 _, buffer = cv2.imencode('.jpg', resized_image)
@@ -93,7 +94,9 @@ class AnnotationView(TemplateView):
         elif usage == 'save':
             frame_no = request.POST['frame_no']
             width = int(request.POST['width'])
-            ratio = self.origin_size[1] / width
+
+            img_width = ImageDataset.objects.filter(frame_no=frame_no).values('width')
+            ratio = img_width / width
 
             datas = literal_eval(request.POST['data'])['data']
             for data in datas:
@@ -123,7 +126,6 @@ class AnnotationView(TemplateView):
                 img_height = F('height')
             ).values('camera', 'intrinsic', 'extrinsic', 'joint', 'img_width', 'img_height')
             gt_dataset = []
-
             for row in rows:
                 gt_dataset.append([literal_eval(row['joint']), literal_eval(row['intrinsic']), literal_eval(row['extrinsic'])])
             mesh, Jtr, result = run_model(gt_dataset, 'neutral', 30)
@@ -131,16 +133,15 @@ class AnnotationView(TemplateView):
 
             data = []
             for row in rows:
-                # image = cv2.imread(osp.join(image_root_path, row['image_path']))
                 image = np.zeros((row['img_height'], row['img_width'], 4))
                 vis_image = display_model2(
                     image, mesh.squeeze().detach(),
                     torch.Tensor(literal_eval(row['intrinsic'])),
                     torch.Tensor(literal_eval(row['extrinsic'])),
-                    self.origin_size[1], self.origin_size[0])
+                    row['img_width'], row['img_height'])
 
-                ratio = width / self.origin_size[1]
-                dim = (width, int(self.origin_size[0] * ratio))
+                ratio = width / row['img_width']
+                dim = (width, int(row['img_height'] * ratio))
                 resized_image = cv2.resize(vis_image, dim, interpolation=cv2.INTER_AREA)
                 _, buffer = cv2.imencode('.jpg', resized_image)
                 image_encoded = base64.b64encode(buffer).decode('utf-8')
@@ -401,26 +402,24 @@ class FileUploadView(View):
             with open(saved_path, 'wb') as wfile:
                 wfile.write(decoded_string)
             vidcap = cv2.VideoCapture(saved_path)
-            frame_no = 0
-            success, image = vidcap.read()
-            file_name = 'frame_{}.jpg'.format(frame_no)
-            img_path = osp.join(image_root_path, camera_no, file_name)
-            cv2.imwrite(img_path, image)
 
-            width = self.thumbnail_width
-            ratio = width / image.shape[1]
-            dim = (width, int(image.shape[0] * ratio))
-            logger.info('make thumbnail image')
-            thumbnail = cv2.resize(image, dim, interpolation=cv2.INTER_AREA)
-            frame_no += 1
-            logger.info('start split video frame...')
-            while success:
-                file_name = 'frame_{}.jpg'.format(frame_no)
-                img_path = osp.join(image_root_path, camera_no, file_name)
-                cv2.imwrite(img_path, image)
+            # success, image = vidcap.read()
+            frame_no = 0
+            # logger.info('start split video frame...')
+            while True:
+                # img_path = osp.join(image_root_path, camera_no, file_name)
+                # cv2.imwrite(img_path, image)
+
                 success, image = vidcap.read()
                 if not success:
                     break
+                if frame_no==0:
+                    width = self.thumbnail_width
+                    ratio = width / image.shape[1]
+                    dim = (width, int(image.shape[0] * ratio))
+                    logger.info('make thumbnail image')
+                    thumbnail = cv2.resize(image, dim, interpolation=cv2.INTER_AREA)
+                file_name = 'frame_{}.jpg'.format(frame_no)
                 height, width, _ = image.shape
                 image_dataset = ImageDataset(
                     img_path=file_name, frame_no=frame_no, camera_no=int(camera_no),
@@ -436,7 +435,7 @@ class FileUploadView(View):
                 else:
                     image_dataset.save()
                 frame_no += 1
-
+            print('frame count: {}'.format(frame_no))
             shutil.rmtree('tmp')
             logger.info('...end split video by frame')
             logger.info('encoding to base64')
