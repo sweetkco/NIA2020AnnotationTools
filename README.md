@@ -14,9 +14,9 @@
  
  1. 2D_json (file-naming: {franme_no}.json)
  
- ```json
+ ```
  info{
- "supercategory" : str
+ "supercategory" : str,
  "img_width" : int,
  "img_height : int,
  "camera_no" : int,
@@ -24,7 +24,7 @@
  "annotations" : [annotations]
  }
  ```
-```json
+```
 annotations {
 "img_no" : int,
 "img_path" : str,
@@ -33,7 +33,7 @@ annotations {
 ```
 
 2. 3D_json (file-naming: 3D_{franme_no}.json)
-```json
+```
  info{
  "supercategory" : str,
  "img_width" : int,
@@ -44,7 +44,7 @@ annotations {
  "annotations" : [annotations]
  }
 ```
-```json
+```
 annotations{
 "frame_no" : str,
 "obj_path" : str,
