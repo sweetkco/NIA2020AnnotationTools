@@ -14,7 +14,7 @@
  
  1. 2D_json (file-naming: {franme_no}.json)
  
- ```
+ ```json
  info{
  "supercategory" : str,
  "img_width" : int,
