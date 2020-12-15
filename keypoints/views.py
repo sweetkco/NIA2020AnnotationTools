@@ -56,7 +56,10 @@ class AnnotationView(TemplateView):
             data = []
             for camera_no, image_path, joint2d, intrinsics, extrinsics in image_path_list:
                 if joint2d is None:
-                    prev_joint = ImageDataset.objects.get(frame_no=frame_no-1, camera_no=camera_no).joint_2d
+                    try:
+                        prev_joint = ImageDataset.objects.get(frame_no=frame_no-1, camera_no=camera_no).joint_2d
+                    except:
+                        prev_joint = None
                     if prev_joint is not None:
                         # init by previous frame pose
                         joint2d = prev_joint
@@ -398,21 +401,22 @@ class FileUploadView(View):
             with open(saved_path, 'wb') as wfile:
                 wfile.write(decoded_string)
             vidcap = cv2.VideoCapture(saved_path)
+            frame_no = 0
             success, image = vidcap.read()
             width = self.thumbnail_width
             ratio = width / image.shape[1]
             dim = (width, int(image.shape[0] * ratio))
             logger.info('make thumbnail image')
             thumbnail = cv2.resize(image, dim, interpolation=cv2.INTER_AREA)
-            frame_no = 0
+            frame_no += 1
             logger.info('start split video frame...')
             while success:
                 file_name = 'frame_{}.jpg'.format(frame_no)
                 img_path = osp.join(image_root_path, camera_no, file_name)
                 cv2.imwrite(img_path, image)
                 success, image = vidcap.read()
-                # if not success:
-                #     break
+                if not success:
+                    break
                 height, width, _ = image.shape
                 image_dataset = ImageDataset(
                     img_path=file_name, frame_no=frame_no, camera_no=int(camera_no),
