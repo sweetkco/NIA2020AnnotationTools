@@ -35,7 +35,7 @@ annotations {
 2. 3D_json (file-naming: 3D_{franme_no}.json)
 ```json
  info{
- "supercategory" : str
+ "supercategory" : str,
  "img_width" : int,
  "img_height : int,
  "camera_no" : int,
@@ -51,6 +51,5 @@ annotations{
 "3d_pos" : [3D-keyopint location],
 "3d_rot" : [3D-keypoint rotation],
 "trans_params" : [trans parameter(SMPL)]
-"
 }
 ```
