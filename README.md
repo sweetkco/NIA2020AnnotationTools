@@ -3,7 +3,7 @@
 ## Introduction
 한국 정보화 진흥원 2020 인공지능 데이터셋 어노테이션 툴 입니다
 
-**본 툴에서 제공하는 기능
+** 본 툴에서 제공하는 기능
  
  - video 파일 업로드 및 프레임 단위 이미지 분할
  - 2D Human pose estimation을 위한 2D Keypoint dataset 구축
