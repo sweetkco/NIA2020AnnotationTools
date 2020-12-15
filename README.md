@@ -20,10 +20,10 @@ pip install -r requirements.txt
 ```
 3. database 초기설정
 ```
-python manage.py makemigrations
+python manage.py makemigrations keypoints
 ```
 ```
-python manage.py migrate
+python manage.py migrate keypoints
 ```
 4. 실행
 ```
