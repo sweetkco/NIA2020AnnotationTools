@@ -107,12 +107,13 @@ annotations{
  - intrinsics matrix, extrinsics matrixs는 모두 cm 단위 입니다
  - intrinsics matrix 의 principal point는 width로 normalize 해야합니다 ( {principal-point / {image-width} )
  - 4개 카메라 관련 정보를 모두 업로드해야 데이터셋 구축이 원활히 진행됩니다
- - 본 데이터의 구축은 smpl human body model을 기반으로 돌아가며
+ - 본 데이터의 구축은 smpl human body model을 기반으로 돌아가며 이에따라 본 툴의 라이센스는 SMPL 라이센스 정책을 포함합니다
  
  ## 라이센스
  
- 본 툴은 연구목적으로 수정, 배포 등이 가능하며 상업적 이용 시 스위트케이로 연락
+ 본 툴은 연구목적으로 사용, 수정, 배포 등이 가능하며 상업적 이용 시 스위트케이로 연락바랍니다
  smpl model license
+ ```
  @article{SMPL:2015,
       author = {Loper, Matthew and Mahmood, Naureen and Romero, Javier and Pons-Moll, Gerard and Black, Michael J.},
       title = {{SMPL}: A Skinned Multi-Person Linear Model},
@@ -124,7 +125,9 @@ annotations{
       volume = {34},
       year = {2015}
     }
+```
 sweetk license
+```
 @article{SWEETK:2020,
       author = {Joono L., Youngkwang K., Hyukmin K.},
       title = {{SWEETK}: NIA2020 Annotation tools},
@@ -132,3 +135,4 @@ sweetk license
       publisher = {SWEETK},
       year = {2020}
     }
+```
