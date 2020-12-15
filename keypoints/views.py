@@ -95,9 +95,9 @@ class AnnotationView(TemplateView):
             frame_no = request.POST['frame_no']
             width = int(request.POST['width'])
 
-            img_width = ImageDataset.objects.filter(frame_no=frame_no).values('width')
+            img_width = [x for x in ImageDataset.objects.filter(frame_no=frame_no).values('width')][0]['width']
             ratio = img_width / width
-
+            
             datas = literal_eval(request.POST['data'])['data']
             for data in datas:
                 camera_no = data['camera_no']
@@ -347,6 +347,7 @@ class FileUploadView(View):
             ).values('camera', 'image_path', 'intrinsic', 'extrinsic')
 
         saved_info = []
+        std_camera_no = [x for x in range(self.n_camera)]
         if len(rows) < 1:
             for camera in range(self.n_camera):
                 saved_info.append({
@@ -372,6 +373,15 @@ class FileUploadView(View):
                     'intrinsics': np.array(literal_eval(row['intrinsic'])).flatten().tolist(),
                     'extrinsics': np.array(literal_eval(row['extrinsic'])).flatten().tolist()
                 })
+                std_camera_no.remove(camera)
+        print(std_camera_no)
+        for c in std_camera_no:
+            saved_info.append({
+                'camera': c,
+                'src': "",
+                'intrinsics': np.zeros(9).tolist(),
+                'extrinsics': np.zeros(12).tolist()
+            })
         for i in range(self.n_camera):
             is_contain = False
             for info in saved_info:
@@ -405,11 +415,8 @@ class FileUploadView(View):
 
             # success, image = vidcap.read()
             frame_no = 0
-            # logger.info('start split video frame...')
+            logger.info('start split video frame...')
             while True:
-                # img_path = osp.join(image_root_path, camera_no, file_name)
-                # cv2.imwrite(img_path, image)
-
                 success, image = vidcap.read()
                 if not success:
                     break
@@ -420,6 +427,8 @@ class FileUploadView(View):
                     logger.info('make thumbnail image')
                     thumbnail = cv2.resize(image, dim, interpolation=cv2.INTER_AREA)
                 file_name = 'frame_{}.jpg'.format(frame_no)
+                img_path = osp.join(image_root_path, camera_no, file_name)
+                cv2.imwrite(img_path, image)
                 height, width, _ = image.shape
                 image_dataset = ImageDataset(
                     img_path=file_name, frame_no=frame_no, camera_no=int(camera_no),
