@@ -164,7 +164,7 @@ class AnnotationView(TemplateView):
                 joint = F('joint_2d'),
                 img_width = F('width'),
                 img_height = F('height'),
-                image_no = F('img_no')
+                image_no = F('img_no'),
             ).values('camera_no', 'image_path', 'joint', 'img_width', 'img_height', 'image_no')
 
             temp_path = osp.join('tmp', 'Image')
@@ -260,7 +260,7 @@ class AnnotationView(TemplateView):
             with open(osp.join(temp_path, filename), 'w') as json_file:
                 json.dump(json_out, json_file, indent=4)
             tar_list.append(osp.join(temp_path, filename))
-            # make shape json
+
             logger.info('make obj')
             pose = np.array(literal_eval(data['rot']))
             vertice, faces = run_model_single(
@@ -278,7 +278,18 @@ class AnnotationView(TemplateView):
             filename = '{}.obj'.format(frame_no)
             save_obj(mesh.vertices, mesh.faces, osp.join(temp_path, filename))
             tar_list.append(osp.join(temp_path, filename))
-
+            # make shape json
+            logger.info('make shape json')
+            temp_path = osp.join('tmp', 'Shape_params')
+            if not osp.exists(temp_path):
+                os.mkdir(temp_path)
+            json_out = {
+                'shape_param': literal_eval(data['shapes'])
+            }
+            filename = '{}.json'.format(frame_no)
+            with open(osp.join(temp_path, filename), 'w') as json_file:
+                json.dump(json_out, json_file, indent=4)
+            tar_list.append(osp.join(temp_path, filename))
             logger.info('make camera json')
             temp_path = osp.join('tmp', 'Camera_json')
             if not osp.exists(temp_path):
