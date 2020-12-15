@@ -343,22 +343,31 @@ class FileUploadView(View):
             ).values('camera', 'image_path', 'intrinsic', 'extrinsic')
 
         saved_info = []
-        for row in rows:
-            camera = row['camera']
-            image = cv2.imread(osp.join(image_root_path, row['image_path']))
-            width = self.thumbnail_width
-            ratio = width / image.shape[1]
-            dim = (width, int(image.shape[0] * ratio))
-            logger.info('make thumbnail image')
-            thumbnail = cv2.resize(image, dim, interpolation=cv2.INTER_AREA)
-            _, buffer = cv2.imencode('.jpg', thumbnail)
-            src = base64.b64encode(buffer).decode('utf-8')
-            saved_info.append({
-                'camera': camera,
-                'src': 'data:image/png;base64,' + src,
-                'intrinsics': np.array(literal_eval(row['intrinsic'])).flatten().tolist(),
-                'extrinsics': np.array(literal_eval(row['extrinsic'])).flatten().tolist()
-            })
+        if len(rows) < 1:
+            for camera in range(self.n_camera):
+                saved_info.append({
+                    'camera': camera,
+                    'src': "",
+                    'intrinsics': np.zeros(9).tolist(),
+                    'extrinsics': np.zeros(12).tolist()
+                })
+        else:
+            for row in rows:
+                camera = row['camera']
+                image = cv2.imread(osp.join(image_root_path, row['image_path']))
+                width = self.thumbnail_width
+                ratio = width / image.shape[1]
+                dim = (width, int(image.shape[0] * ratio))
+                logger.info('make thumbnail image')
+                thumbnail = cv2.resize(image, dim, interpolation=cv2.INTER_AREA)
+                _, buffer = cv2.imencode('.jpg', thumbnail)
+                src = base64.b64encode(buffer).decode('utf-8')
+                saved_info.append({
+                    'camera': camera,
+                    'src': 'data:image/png;base64,' + src,
+                    'intrinsics': np.array(literal_eval(row['intrinsic'])).flatten().tolist(),
+                    'extrinsics': np.array(literal_eval(row['extrinsic'])).flatten().tolist()
+                })
         for i in range(self.n_camera):
             is_contain = False
             for info in saved_info:
