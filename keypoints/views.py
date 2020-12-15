@@ -403,6 +403,10 @@ class FileUploadView(View):
             vidcap = cv2.VideoCapture(saved_path)
             frame_no = 0
             success, image = vidcap.read()
+            file_name = 'frame_{}.jpg'.format(frame_no)
+            img_path = osp.join(image_root_path, camera_no, file_name)
+            cv2.imwrite(img_path, image)
+
             width = self.thumbnail_width
             ratio = width / image.shape[1]
             dim = (width, int(image.shape[0] * ratio))
