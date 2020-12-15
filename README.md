@@ -99,3 +99,4 @@ annotations{
  "shape_params" : [shape parameter(SMPL)]
 }
 ```
+5. Image (file-naming: {frame_no}/frame_{frame_no}.jpg)
