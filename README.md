@@ -112,7 +112,7 @@ annotations{
  ## 라이센스
  
  본 툴은 연구목적으로 사용, 수정, 배포 등이 가능하며 상업적 이용 시 스위트케이로 연락바랍니다
- smpl model license
+ - smpl model license
  ```
  @article{SMPL:2015,
       author = {Loper, Matthew and Mahmood, Naureen and Romero, Javier and Pons-Moll, Gerard and Black, Michael J.},
@@ -126,9 +126,7 @@ annotations{
       year = {2015}
     }
 ```
-
-
-sweetk license
+- sweetk license
 ```
 @article{SWEETK:2020,
       author = {Joono L., Youngkwang K., Hyukmin K.},
