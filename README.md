@@ -47,12 +47,12 @@ annotations {
 annotations{
  "frame_no" : str,
  "obj_path" : str,
- "3d_pos" : [3D-keyopint location],
+ "3d_pos" : [3D-keypoint location],
  "3d_rot" : [3D-keypoint rotation],
  "trans_params" : [trans parameter(SMPL)]
 }
 ```
-3. Camera_json
+3. Camera_json (file-naming: {camera_no}.json)
 ```
 {
 "camera_no" : int,
@@ -60,7 +60,7 @@ annotations{
 "intrinsics" : [intrinsics matrix]
 }
 ```
-4. Shape_json
+4. Shape_json (file-naming: {frame_no}.json)
 ```
 {
  "shape_params" : [shape parameter(SMPL)]
