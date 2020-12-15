@@ -356,6 +356,7 @@ class FileUploadView(View):
                     'intrinsics': np.zeros(9).tolist(),
                     'extrinsics': np.zeros(12).tolist()
                 })
+                std_camera_no.remove(camera)
         else:
             for row in rows:
                 camera = row['camera']
