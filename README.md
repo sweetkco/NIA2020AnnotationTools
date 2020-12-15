@@ -16,41 +16,41 @@
  
  ```json
  info{
- "supercategory"  : str
- "img_width"  : int,
- "img_height  : int,
- "camera_no"  : int,
+ "supercategory" : str
+ "img_width" : int,
+ "img_height : int,
+ "camera_no" : int,
  "2d_pos  : [2D-keypoint location info],
- "annotations"  : [annotations]
+ "annotations" : [annotations]
  }
  ```
 ```json
 annotations {
-"img_no"  : int,
-"img_path"  : str,
-"2d_pos"  : [2D-keypoint location]
+"img_no" : int,
+"img_path" : str,
+"2d_pos" : [2D-keypoint location]
 }
 ```
 
 2. 3D_json (file-naming: 3D_{franme_no}.json)
 ```json
  info{
- "supercategory"  : str
- "img_width"  : int,
- "img_height  : int,
- "camera_no"  : int,
- "3d_pos  : [3D-keypoint location info],
+ "supercategory" : str
+ "img_width" : int,
+ "img_height : int,
+ "camera_no" : int,
+ "3d_pos : [3D-keypoint location info],
  "3d_rot" : [3D-keyopint rotation info],
- "annotations"  : [annotations]
+ "annotations" : [annotations]
  }
 ```
 ```json
 annotations{
-"frame_no"  : str,
-"obj_path"  : str,
-"3d_pos"  : [3D-keyopint location],
-"3d_rot"  : [3D-keypoint rotation],
-"trans_params"  : [trans parameter(SMPL)]
+"frame_no" : str,
+"obj_path" : str,
+"3d_pos" : [3D-keyopint location],
+"3d_rot" : [3D-keypoint rotation],
+"trans_params" : [trans parameter(SMPL)]
 "
 }
 ```
